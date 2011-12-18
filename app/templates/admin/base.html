@@ -1,0 +1,62 @@
+{# Used for Flask.Admin -#}
+{% extends "report_layout.html" -%}
+{%- block head %}
+{{super()}}
+<style type="text/css">
+ul {
+	list-style: none;
+}
+.sub-nav {
+	border: 1px solid #333;
+	border-left: 0 none #000;
+	border-right: 0 none #000;
+}
+.sub-nav + *:before {
+	clear: both;
+	content: ".";
+	display: block;
+	height: 1px;
+	text-indent: -9999em;
+}
+.sub-nav, .sub-nav li {
+	float: left;
+}
+.sub-nav li {
+	margin-right: 1em;
+}
+/* Admin buttons */
+.ui-widget {
+	display: inline-block;
+	height: 1em;
+}
+.ui-icon {
+	display: inline-block;
+	height: 1em;
+	width: 1em;
+}
+.ui-icon-plusthick:after {
+	content: "\271A"
+}
+.ui-icon-pencil:after {
+	content: "\270E"
+}
+.ui-icon-trash:after {
+	content: "\2717";
+}
+/* Admin errors */
+.errors_list { color: #C00; }
+</style>
+{% block extra_head %}{% endblock extra_head -%}
+{%- endblock head %}
+{% block content -%}
+{{super()}}
+<ul class="sub-nav">
+{# Changes to model_names in HEAD #}
+{% for model in admin_models|sort -%}
+<li>
+<a href="{{ url_for('.list_view', model_name=model, page=1)}}">{{model}}</a>
+</li>
+{% endfor -%}
+</ul>
+{%- block main %}{% endblock main %}
+{%- endblock content %}

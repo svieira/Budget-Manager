@@ -1,0 +1,13 @@
+*.pyc
+bin/
+bin/*
+budget.sqlite
+example imports/
+example imports/*
+include/
+include/*
+lib/
+lib/*
+local
+local/
+local/*

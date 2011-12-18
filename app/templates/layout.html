@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge;chrome=1">
+<title>{% block title %}{{title|d("Budget Manager")}}{% endblock title %}{% if self.title() and self.title() != "Budget Manager" %} - Budget Manager{% endif %}</title>
+{% block head -%}
+<link rel="shortcut icon" href="{{ url_for("static", filename="images/favicon.ico") }}" />
+<link rel="stylesheet" href="{{ url_for("static", filename="css/base_styles.css") }}" type="text/css" media="screen" />
+{% endblock head -%}
+</head>
+<body>
+{%- if self.header() %}
+<div class="header">{% block header %}<h1>{{self.title()}}</h1>
+<p><a href="{{url_for('index')}}">Home</a> &bull; <a href="{{url_for('admin.index')}}">Admin (Data Entry)</a></p>
+{%- endblock header %}</div>
+{%- endif %}
+{% set flashed_messages = get_flashed_messages(with_categories=true) -%}
+{% if flashed_messages -%}
+<div class="flash-messages">
+{%- block messages %}
+{% for category, message in flashed_messages -%}
+<div class="flash-{{category}}">{{ message }}</div>
+{%- endfor %}
+{%- endblock messages %}
+</div>
+{%- endif %}
+{%- if self.content() %}
+<div class="content">{% block content -%}{{content}}{%- endblock content %}</div>
+{%- endif %}
+{% if self.footer() -%}
+<div class="footer">{% block footer %}{% endblock footer %}</div>
+{%- endif %}
+{% block post_footer %}{% endblock post_footer -%}
+{% if self.js_footer() -%}
+<script type="text/javascript">
+{% block js_footer %}{% endblock js_footer %}
+</script>
+{% endif -%}
+</body>
+</html>

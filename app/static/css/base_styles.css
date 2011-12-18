@@ -1,0 +1,75 @@
+/* BASE STYLES */
+html, body {
+	font-family: Verdana, sans-serif;
+	margin: 0;
+	padding: 0;
+}
+a, a:link, a:visited {
+	text-decoration: none;
+}
+a:visited {
+	color: #900;
+}
+a, a:link {
+	color: #C33;
+}
+a:active, a:hover {
+	color: #F77;
+}
+table {
+	border-collapse: collapse;
+	border: 1px solid #777;
+}
+tr:nth-child(even) td {
+	background-color: #DCDCDC;
+}
+tr:nth-child(even) td:nth-child(even) {
+	background-color: #EDEDED;
+}
+tr:nth-child(odd) td:nth-child(odd) {
+	background-color: #EEE;
+}
+td, th {
+	border: 1px solid #EEE;
+	padding: .5em;
+}
+
+/* DEFAULT SECTION STYLES */
+
+.header {
+	background-color: #8C0000;
+	box-shadow: 0 .25em .5em #000;
+	color: #FEFDFD;
+	margin: -1px 0 0;
+	padding: 1px 1em 0;
+}
+.header a:visited {
+	color: #EECCCC;
+}
+.header a, .header a:link {
+	color: #FEDFDF;
+}
+.header a:active, .header a:hover {
+	color: #FFF;
+}
+.header h1 {
+	font-weight: normal;
+	margin: .25em 0;
+}
+
+.flash-messages {
+	border: 1px solid #CCC;
+	margin: 1em;
+	padding: 1em 5em;
+}
+.flash-error {
+	color: #F33;
+}
+
+.content {
+	margin: 1em;
+}
+
+.footer {
+	
+}

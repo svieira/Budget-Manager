@@ -1,0 +1,36 @@
+CREATE TABLE "Accounts" (
+    "AccountID" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT,
+    "IsCredit" INTEGER NOT NULL DEFAULT (0)
+);
+CREATE TABLE "Categories" (
+    "CategoryID" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT
+);
+CREATE TABLE "TransactionTags" (
+    "TagID" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT,
+    "CategoryID" INTEGER NOT NULL DEFAULT(0) REFERENCES Categories(CategoryID) ON UPDATE CASCADE ON DELETE SET DEFAULT
+);
+CREATE TABLE "TransactionTypes" (
+    "TransactionTypeID" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT,
+    "IsIncome" INTEGER NOT NULL DEFAULT (0)
+);
+CREATE TABLE Transactions (
+    "TransactionID" INTEGER NOT NULL,
+    "Amount" INTEGER NOT NULL,
+    "Description" TEXT NOT NULL,
+    "TransactionDate" TEXT NOT NULL,
+    "TransactionTypeID" INTEGER NOT NULL DEFAULT (0) REFERENCES TransactionTypes(TransactionTypeID) ON UPDATE CASCADE ON DELETE SET DEFAULT, 
+    "AccountID" INTEGER  NOT NULL  DEFAULT (0)  REFERENCES Accounts(AccountID) ON UPDATE CASCADE ON DELETE SET DEFAULT
+);
+CREATE TABLE "TransactionsToTags" (
+    "TransactionID" INTEGER NOT NULL REFERENCES Transactions(TransactionID) ON UPDATE CASCADE ON DELETE CASCADE,
+    "TagID" INTEGER NOT NULL REFERENCES TransactionTags(TagID) ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY ("TransactionID","TagID")
+);

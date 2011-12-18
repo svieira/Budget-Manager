@@ -1,0 +1,18 @@
+{% extends "layout.html" -%}
+{% import "helpers/table_helpers.html" as tables -%}
+{% block head -%}
+{{super()}}
+<link rel="stylesheet" href="{{ url_for("static", filename="plugins/chosen/chosen.css") }}" type="text/css" media="screen" />
+{%- endblock head -%}
+{%- block content %}
+<table>
+{{tables.generate_contents(results)}}
+</table>
+{%- endblock content %}
+{% block post_footer %}
+<script type="text/javascript" src="{{ url_for("static", filename="js/jquery.js") }}"></script>
+<script type="text/javascript" src="{{ url_for("static", filename="plugins/chosen/chosen.jquery.min.js") }}"></script>
+{% endblock post_footer -%}
+{% block js_footer %}
+$(function(){ $("select").chosen(); });
+{% endblock js_footer %}

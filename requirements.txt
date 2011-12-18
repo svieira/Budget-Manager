@@ -1,0 +1,11 @@
+Flask==0.8
+Flask-Admin==0.2.2
+Flask-SQLAlchemy==0.15
+Flask-WTF==0.5.2
+Jinja2==2.6
+MarkupSafe==0.15
+SQLAlchemy==0.7.3
+WTForms==0.6.3
+Werkzeug==0.8.1
+distribute==0.6.19
+wsgiref==0.1.2

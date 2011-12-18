@@ -1,0 +1,17 @@
+{% macro generate_contents(itrbl, includes_headers=true) -%}
+{% set headers = includes_headers -%}
+{%- for result in itrbl %}
+<tr>
+{% if headers -%}
+{% for entry in result -%}
+<th>{{entry}}</th>
+{% endfor -%}
+{% set headers = false -%}
+{% else -%}
+{% for entry in result -%}
+<td>{{entry}}</td>
+{% endfor -%}
+{% endif -%}
+</tr>
+{%- endfor %}
+{%- endmacro %}
