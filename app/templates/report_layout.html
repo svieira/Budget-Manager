@@ -5,9 +5,11 @@
 <link rel="stylesheet" href="{{ url_for("static", filename="plugins/chosen/chosen.css") }}" type="text/css" media="screen" />
 {%- endblock head -%}
 {%- block content %}
+{% if results -%}
 <table>
 {{tables.generate_contents(results)}}
 </table>
+{%- endif %}
 {%- endblock content %}
 {% block post_footer %}
 <script type="text/javascript" src="{{ url_for("static", filename="js/jquery.js") }}"></script>
