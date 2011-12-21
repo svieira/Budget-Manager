@@ -3,6 +3,7 @@ from sqlalchemy.sql import func
 
 db = SQLAlchemy()
 
+
 class Account(db.Model):
     __tablename__ = "Accounts"
     __table_args__ = {'sqlite_autoincrement': True}
@@ -17,6 +18,7 @@ class Account(db.Model):
     def __repr__(self):
         return "{} Account".format(self.name)
 
+
 class Category(db.Model):
     __tablename__ = "Categories"
     __table_args__ = {'sqlite_autoincrement': True}
@@ -29,6 +31,7 @@ class Category(db.Model):
 
     def __repr__(self):
         return "{}".format(self.name)
+
 
 class TransactionType(db.Model):
     __tablename__ = "TransactionTypes"
@@ -45,20 +48,23 @@ class TransactionType(db.Model):
         kind = "Income" if self.isIncome else "Spending"
         return "{} ({})".format(self.name, kind)
 
+
 class TransactionsToTags(db.Model):
     __tablename__ = "TransactionsToTags"
     transactionID = db.Column(db.Integer, db.ForeignKey("Transactions.transactionID"), primary_key=True)
     tagID = db.Column(db.Integer, db.ForeignKey("TransactionTags.tagID"), primary_key=True)
 
+
 def get_trans_id():
     max_trans_id = Transaction.query.with_entities(func.max(Transaction.transactionID).label("transactionID")).first().transactionID
     return max_trans_id + 1
+
 
 class Transaction(db.Model):
     __tablename__ = "Transactions"
     __table_args__ = {'sqlite_autoincrement': True}
 
-    transactionID = db.Column(db.Integer, primary_key=True, default=get_trans_id)
+    transactionID = db.Column(db.Integer, primary_key=True, nullable=False, default=get_trans_id)
     amount = db.Column(db.Numeric, nullable=False)
     description = db.Column(db.String, nullable=False)
     transactionDate = db.Column(db.DateTime, nullable=False)
@@ -73,6 +79,7 @@ class Transaction(db.Model):
 
     def __repr__(self):
         return "{} for {} on {}".format(self.description, self.amount, self.transactionDate)
+
 
 class TransactionTag(db.Model):
     __tablename__ = "TransactionTags"
