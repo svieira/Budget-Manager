@@ -1,0 +1,50 @@
+{% macro render_form(form, group_errors=false, grouped_fields=["HiddenField", "SubmitField"]) -%}
+{% if group_errors -%}
+{{render_all_errors(form)}}
+{%- endif %}
+{%- set final_fields = [] %}
+<form method="post"{{kwargs|xmlattr}}>
+<dl>
+{% for field in form -%}
+{% if field.type in grouped_fields -%}{{final_fields.append(field)|d("", true)}}{%- else -%}
+{% set classname = {"class": " ".join([field.name, field.type] if not field.errors else [field.name, field.type, "error-field"])} -%}
+<dt{{classname|xmlattr}}>{{field.label}}</dt>
+<dd{{classname|xmlattr}}>{{field}}
+{%- if field.errors and not group_errors -%}
+{{render_field_errors(field)}}
+{%- endif -%}
+</dd>
+{%- endif %}
+{%- endfor %}
+</dl>
+<div class="fields-submit">
+{%- for field in final_fields %}
+{{field}}
+{%- endfor %}
+</div>
+</form>
+{%- endmacro %}
+
+{%- macro render_all_errors(form) -%}
+<div class="error-list">
+<ul class="error-names">
+{% for fieldname, errors in form.errors.items() -%}
+<li class="error-name">{{fieldname}}
+<ul class="error-values">
+{% for error in errors -%}
+<li class="error-value">{{error}}</li>
+{%- endfor %}
+</ul>
+</li>
+{%- endfor %}
+</ul>
+</div>
+{%- endmacro %}
+
+{%- macro render_field_errors(field) -%}
+<ul class="error-values">
+{% for error in field.errors -%}
+<li class="error-value">{{error}}</li>
+{% endfor -%}
+</ul>
+{%- endmacro %}

@@ -1,9 +1,11 @@
-from flask import abort, flash, Flask, g, Markup, render_template, url_for
+from flask import abort, flash, Flask, g, Markup, render_template, request, url_for
 from flask.ext import admin
+from importer import FileUploadForm
 from models import db
 from models import Account, Category, TransactionType, Transaction, TransactionTag, TransactionsToTags
 from re import compile, IGNORECASE
 from server.database import connect_db, query_db
+from werkzeug import secure_filename
 
 
 VALID_TABLENAME = compile("^[a-z]+[a-z0-9_]$", IGNORECASE)
@@ -60,10 +62,16 @@ def configure_routes(app, db):
 
         return render_template("layout.html", content=results)
 
-    @app.route("/config")
-    def view_config():
-        return render_template("layout.html",
-                                content=Markup("<pre>{}</pre>").format("\n".join([key + ": " + str(value) for key, value in app.config.items()])))
+    @app.route("/import", methods=["GET", "POST"])
+    def data_import():
+        form = FileUploadForm(request.form)
+
+        if request.method == "POST" and form.validate():
+            f = request.files["file"]
+            filename = secure_filename(f.filename)
+            flash("Received {}".format(filename))
+
+        return render_template("edit_layout.html", form=form, title="Import Data")
 
     @app.route("/<table_name>")
     def view_table(table_name=None):
