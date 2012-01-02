@@ -11,3 +11,5 @@ lib/*
 local
 local/
 local/*
+uploads/*
+!uploads/.gitinclude
