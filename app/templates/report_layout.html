@@ -5,8 +5,8 @@
 <link rel="stylesheet" href="{{ url_for("static", filename="plugins/chosen/chosen.css") }}" type="text/css" media="screen" />
 {%- endblock head -%}
 {%- block content %}
-{% if results -%}
-<table>
+{% if results is defined -%}
+<table class="results">
 {{tables.generate_contents(results)}}
 </table>
 {%- endif %}
