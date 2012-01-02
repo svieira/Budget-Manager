@@ -1,4 +1,4 @@
-{% macro generate_contents(itrbl, includes_headers=true) -%}
+{% macro generate_contents(itrbl, includes_headers=true, no_data="There is no data to display") -%}
 {% set headers = includes_headers -%}
 {%- for result in itrbl %}
 <tr>
@@ -13,5 +13,7 @@
 {% endfor -%}
 {% endif -%}
 </tr>
+{%- else %}
+<tr><td>{{no_data}}</td></tr>
 {%- endfor %}
 {%- endmacro %}
