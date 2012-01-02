@@ -1,8 +1,9 @@
 from os import path
 
 here = path.dirname(path.abspath(__file__))
+root = path.dirname(path.dirname(here))
 
-db_path = path.join(path.dirname(path.dirname(here)), "budget.sqlite")
+db_path = path.join(root, "budget.sqlite")
 db_path_dev = "sqlite://:memory:"
 
 
@@ -12,6 +13,7 @@ class BaseConfig(object):
     SECRET_KEY = "Don'tTell4ndIwon'tTattl3E1th3r!"
     SQLALCHEMY_DATABASE_URI = db_path
     TESTING = False
+    UPLOAD_FOLDER = path.join(root, "uploads")
 
 
 class DebugConfig(BaseConfig):

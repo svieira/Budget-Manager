@@ -1,11 +1,13 @@
-from flask import abort, flash, Flask, g, Markup, render_template, request, url_for
+from flask import abort, flash, Flask, g, Markup, redirect, render_template, request, url_for
 from flask.ext import admin
-from importer import FileUploadForm
+from importer import FieldMappingForm, FileUploadForm, load_from_file
 from models import db
 from models import Account, Category, TransactionType, Transaction, TransactionTag, TransactionsToTags
+from os import path
 from re import compile, IGNORECASE
 from server.database import connect_db, query_db
 from werkzeug import secure_filename
+from wtforms.fields import SelectField
 
 
 VALID_TABLENAME = compile("^[a-z]+[a-z0-9_]$", IGNORECASE)
@@ -63,15 +65,46 @@ def configure_routes(app, db):
         return render_template("layout.html", content=results)
 
     @app.route("/import", methods=["GET", "POST"])
-    def data_import():
+    def provide_file():
         form = FileUploadForm(request.form)
 
         if request.method == "POST" and form.validate():
             f = request.files["file"]
             filename = secure_filename(f.filename)
-            flash("Received {}".format(filename))
+            f.save(path.join(app.config["UPLOAD_FOLDER"], filename))
+            return redirect(url_for("data_mapping", filename=filename))
 
         return render_template("edit_layout.html", form=form, title="Import Data")
+
+    @app.route("/import/<path:filename>", methods=["GET", "POST"])
+    def data_mapping(filename=None):
+        f = open(path.join(app.config["UPLOAD_FOLDER"], filename), "r")
+        f = load_from_file(f)
+        headers = next(f)
+        lowercase_headers = [h.lower() for h in headers]
+        headers_ = [""] + headers
+        header_list = zip(headers_, headers_)
+        table_columns = Transaction.__table__.columns
+
+        class NewForm(FieldMappingForm):
+            pass
+
+        for field in table_columns:
+            if not field.primary_key:
+                i = lowercase_headers.index(field.name.lower()) if field.name.lower() in lowercase_headers else -1
+                default_ = headers[i] if i >= 0 else None
+                setattr(NewForm, field.name, SelectField(field.name, choices=header_list, default=default_))
+
+        form = NewForm(request.form)
+
+        if request.method == "POST" and form.validate():
+            results = {}
+            for field in form:
+                if field.data and field.name in table_columns:
+                    results[field.name] = field.data
+            return str(results)
+
+        return render_template("edit_layout.html", form=form, title="Map Fields")
 
     @app.route("/<table_name>")
     def view_table(table_name=None):
