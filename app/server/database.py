@@ -1,15 +1,24 @@
-from flask import g
+from flask import Flask, g
 import sqlite3
 
 
-def connect_db(app):
-    return sqlite3.connect(app.config["DB_PATH"])
+def connect_db(path_provider, config_key="DB_PATH"):
+    if isinstance(path_provider, Flask):
+        return sqlite3.connect(path_provider.config[config_key])
+    else:
+        return sqlite3.connect(path_provider)
 
 
-def query_db(query, args=(), include_header=True):
-    results = []
-    cur = g.db.execute(query, args)
+def query_db(query, args=(), include_header=True, conn=None):
+    conn = conn if conn else g.db
+    assert conn is not None, "No connection provided"
+
+    cur = conn.execute(query, args)
+
     if include_header:
-        results.append([desc[0] for desc in cur.description])
-    results += [row for row in cur.fetchall()]
-    return results
+        yield [desc[0] for desc in cur.description]
+
+    row = cur.fetchone()
+    while cur is not None:
+        yield row
+        row = cur.fetchone()
