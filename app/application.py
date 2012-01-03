@@ -61,7 +61,7 @@ def configure_routes(app, db):
             WHERE name NOT LIKE 'sqlite%'
             AND type = 'table'""")
 
-        results = [Markup("""<li><a href="{}">{}</a></li>""").format(url_for("view_table", table_name=tbl_name), name) for name, tbl_name in results[1:]]
+        results = [Markup("""<li><a href="{}">{}</a></li>""").format(url_for("view_table", table_name=tbl_name), name) for name, tbl_name in islice(results, 1, None)]
 
         results = Markup("<ul>") + Markup("\n").join(results) + Markup("</ul>")
 
@@ -121,13 +121,14 @@ def configure_routes(app, db):
     @app.route("/<table_name>")
     def view_table(table_name=None):
         if table_name is None or not VALID_TABLENAME.findall(table_name):
-            abort(404)
+            return abort(404)
         else:
 
             results = []
 
             try:
                 results = query_db("SELECT * FROM {}".format(table_name))
+                results = list(results)
             except Exception:
                 abort(404)
 
