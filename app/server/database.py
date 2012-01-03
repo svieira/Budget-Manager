@@ -19,6 +19,6 @@ def query_db(query, args=(), include_header=True, conn=None):
         yield [desc[0] for desc in cur.description]
 
     row = cur.fetchone()
-    while cur is not None:
+    while row is not None:
         yield row
         row = cur.fetchone()
