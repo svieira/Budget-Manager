@@ -1,6 +1,7 @@
 from flask import abort, flash, Flask, g, jsonify, Markup, redirect, render_template, request, url_for
 from flask.ext import admin
-from importer import FieldMappingForm, FileUploadForm, load_from_file
+from importer import FieldMappingForm, FileUploadForm, load_from_file, prepare_data, import_data
+from itertools import islice
 from models import db
 from models import Account, Category, TransactionType, Transaction, TransactionTag, TransactionsToTags
 from os import path
@@ -108,6 +109,8 @@ def configure_routes(app, db):
         form = NewForm(request.form)
 
         if request.method == "POST" and form.validate():
+            stream = prepare_data(f, mode, form["spend_transactions"].data, form["income_transactions"].data, form["accountID"].data)
+            import_data(stream)
             results = {}
             for field in form:
                 results[field.name] = str(field.data)
