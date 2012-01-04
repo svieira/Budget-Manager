@@ -34,24 +34,26 @@ def load_from_file(f, skip_lines=0, filter_blanks=True, **csv_options):
         yield line
 
 
-def _remove_dollar(value):
-    return "".join(value.split("$"))
+def _strip_formating(value):
+    return "".join("".join(value.split("$")).split(","))
 
 
 def _process_row(date, desc, amount):
-    return [datetime.strptime(date, "%m/%d/%Y"), desc, _remove_dollar(amount)]
+    return [datetime.strptime(date, "%m/%d/%Y"), desc, _strip_formating(amount)]
 
 
 # Select_* functions must return a tuple with t[0] containing
 # the data and t[1] containing a boolean specifying if the data
 # is income.
 def select_seperate(date, desc, spend, save, *args):
-    yield _process_row(date, desc, spend), False
-    yield _process_row(date, desc, save), True
+    if spend:
+        yield _process_row(date, desc, spend), False
+    if save:
+        yield _process_row(date, desc, save), True
 
 
 def select_mixed(date, desc, amount):
-    amount = _remove_dollar(amount)
+    amount = _strip_formating(amount)
     yield _process_row(date, desc, amount), float(amount) < 0
 
 
@@ -106,9 +108,12 @@ def import_data(rows, field_names=["transactionDate", "description", "amount", "
     field_names = field_names if field_names else []
     session = session if session is not None else db.session
 
+    i = 0
     for row in rows:
-        #assert len(row) == len(field_names), \
-        #        "Provided row's length does not match length of field names"
+        assert len(row) == len(field_names), \
+                "Provided row's length does not match length of field names"
         session.add(Model(**dict(izip(field_names, row))))
+        i += 1
 
     session.commit()
+    return i

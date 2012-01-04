@@ -1,10 +1,10 @@
-from flask import abort, flash, Flask, g, jsonify, Markup, redirect, render_template, request, url_for
+from flask import abort, flash, Flask, g, Markup, redirect, render_template, request, url_for
 from flask.ext import admin
 from importer import FieldMappingForm, FileUploadForm, load_from_file, prepare_data, import_data
 from itertools import islice
 from models import db
 from models import Account, Category, TransactionType, Transaction, TransactionTag, TransactionsToTags
-from os import path
+from os import path, remove
 from re import compile, IGNORECASE
 from server.database import connect_db, query_db
 from werkzeug import secure_filename
@@ -84,13 +84,15 @@ def configure_routes(app, db):
 
     @app.route("/import/<path:filename>", methods=["GET", "POST"])
     def data_mapping(filename=None):
+        filepath = path.join(app.config["UPLOAD_FOLDER"], filename)
+
         try:
-            f = open(path.join(app.config["UPLOAD_FOLDER"], filename), "r")
+            data_file = open(filepath, "r")
         except IOError:
             return abort(404)
 
-        f = load_from_file(f)
-        headers = next(f)
+        data_file = load_from_file(data_file)
+        headers = next(data_file)
         lowercase_headers = [h.lower() for h in headers]
         headers_ = [""] + headers
         header_list = zip(headers_, headers_)
@@ -109,12 +111,19 @@ def configure_routes(app, db):
         form = NewForm(request.form)
 
         if request.method == "POST" and form.validate():
-            stream = prepare_data(f, mode, form["spend_transactions"].data, form["income_transactions"].data, form["accountID"].data)
-            import_data(stream)
-            results = {}
-            for field in form:
-                results[field.name] = str(field.data)
-            return jsonify(**results)
+            stream = prepare_data(data_file,
+                                    mode,
+                                    form["spend_transactions"].data,
+                                    form["income_transactions"].data,
+                                    form["accountID"].data)
+            total_imported = import_data(stream)
+            flash("{} records have been imported".format(total_imported))
+
+            data_file.close()
+            remove(filepath)
+
+            # admin.list_view changes to admin.list in HEAD
+            return redirect(url_for('admin.list_view', model_name='Transaction'))
 
         return render_template("edit_layout.html", form=form, title="Map Fields")
 
