@@ -39,7 +39,7 @@ def _strip_formating(value):
 
 
 def _process_row(date, desc, amount):
-    return [datetime.strptime(date, "%m/%d/%Y"), desc, _strip_formating(amount)]
+    return [datetime.strptime(date, "%Y/%m/%d"), desc, _strip_formating(amount)]
 
 
 # Select_* functions must return a tuple with t[0] containing
