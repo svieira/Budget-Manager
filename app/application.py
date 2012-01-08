@@ -3,16 +3,22 @@ from flask.ext import admin
 from importer import FieldMappingForm, FileUploadForm, load_from_file, prepare_data, import_data
 from itertools import islice
 from models import db
-from models import Account, Category, TransactionType, Transaction, TransactionTag, TransactionsToTags
+from models import Account, Category, TransactionType, Transaction, TransactionTag
 from os import path, remove
 from re import compile, IGNORECASE
 from server.database import connect_db, query_db
+from sqlalchemy import or_
 from werkzeug import secure_filename
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields import SelectField
 from wtforms.validators import Required
 
-
+MANAGED_MODELS = [Account, Category, TransactionType, Transaction, TransactionTag]
+MANAGED_MODEL_MAP = dict(account=Account,
+                            category=Category,
+                            transactiontype=TransactionType,
+                            transaction=Transaction,
+                            transactiontag=TransactionTag)
 VALID_TABLENAME = compile("^[a-z]+[a-z0-9_]$", IGNORECASE)
 
 
@@ -28,7 +34,7 @@ def create_app(config_path=None, name=None):
 
     db.init_app(app)
 
-    admin_blueprint = admin.create_admin_blueprint([Account, Category, TransactionType, Transaction, TransactionTag, TransactionsToTags], db.session)
+    admin_blueprint = admin.create_admin_blueprint(MANAGED_MODELS, db.session)
 
     app.register_blueprint(admin_blueprint, url_prefix="/tables")
 
@@ -61,11 +67,44 @@ def configure_routes(app, db):
             WHERE name NOT LIKE 'sqlite%'
             AND type = 'table'""")
 
-        results = [Markup("""<li><a href="{}">{}</a></li>""").format(url_for("view_table", table_name=tbl_name), name) for name, tbl_name in islice(results, 1, None)]
+        li = Markup("""<li><a href="{}">{}</a></li>""")
+        results = [li.format(url_for("view_table", table_name=tbl_name), name) for name, tbl_name in islice(results, 1, None)]
 
         results = Markup("<ul>") + Markup("\n").join(results) + Markup("</ul>")
 
         return render_template("layout.html", content=results)
+
+    @app.route("/search/<model>", methods=["GET", "POST"])
+    @app.route("/search", methods=["GET", "POST"])
+    def search(model=None):
+        query = request.form.get("query", None) or request.args.get("query", None)
+        results = []
+        if not query:
+            return render_template("search.html")
+
+        def generate_search_terms(model):
+            search_terms = []
+            for term in ["name", "description", "amount", "transactionDate"]:
+                if hasattr(model, term):
+                    search_terms.append(term)
+            return [getattr(model, term).like(query) for term in search_terms]
+
+        flash("""Searching for "{}" ...""".format(query))
+        if query.count("%") == 0:
+            query = "%{}%".format(query)
+        if model is None:
+            for model_name, model in MANAGED_MODEL_MAP.items():
+                search_terms = generate_search_terms(model)
+                results.append((model_name, db.session.query(model).filter(or_(*search_terms)).all()))
+            return render_template("search.html", results=results)
+        else:
+            if not model.lower() in MANAGED_MODEL_MAP:
+                return abort(404)
+            flash("""Searching for "{}" in {} ...""".format(query, model))
+            model_ = MANAGED_MODEL_MAP.get(model)
+            search_terms = generate_search_terms(model_)
+            results = [(model, db.session.query(model_).filter(or_(*search_terms)))]
+            return render_template("search.html", results=results)
 
     @app.route("/import", methods=["GET", "POST"])
     def provide_file():

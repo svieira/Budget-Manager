@@ -1,0 +1,23 @@
+{% extends "layout.html" -%}
+{% import "helpers/form_helpers.html" as forms -%}
+{% import "helpers/list_helpers.html" as lists -%}
+{% import "helpers/table_helpers.html" as tables -%}
+{%- block title %}Search{% endblock title -%}
+{%- block content %}
+{{super()}}
+<form>
+<input type="text" name="query">
+<input type="submit" value="Search">
+</form>
+{% if results is defined -%}
+{% for model, result in results -%}
+{% if loop.index > 1 -%}
+<hr>
+{% endif -%}
+<h2>{{model}}</h2>
+<ul class="results">
+{{lists.generate_list(result)}}
+</ul>
+{%- endfor %}
+{%- endif %}
+{%- endblock content %}
