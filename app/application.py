@@ -122,8 +122,7 @@ def configure_routes(app, db):
             data_file.close()
             remove(filepath)
 
-            # admin.list_view changes to admin.list in HEAD
-            return redirect(url_for('admin.list_view', model_name='Transaction'))
+            return redirect(url_for('admin.list', model_name='Transaction'))
 
         return render_template("edit_layout.html", form=form, title="Map Fields")
 
