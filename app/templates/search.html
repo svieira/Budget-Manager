@@ -11,6 +11,7 @@
 </form>
 {% if results is defined -%}
 {% for model, result in results -%}
+{% if result -%}
 {% if loop.index > 1 -%}
 <hr>
 {% endif -%}
@@ -18,6 +19,7 @@
 <ul class="results">
 {{lists.generate_list(result)}}
 </ul>
+{% endif -%}
 {%- endfor %}
 {%- endif %}
 {%- endblock content %}
