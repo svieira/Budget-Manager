@@ -65,9 +65,7 @@ def exhaust_substreams(stream):
 
 
 def inject_data(val, stream, replace=False):
-    is_func = False
-    if callable(val):
-        is_func = True
+    is_func = callable(val)
     if replace and not is_func:
         raise ValueError("Mode is replace but val is not callable")
     for datum in stream:
