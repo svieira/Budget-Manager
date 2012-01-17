@@ -187,6 +187,11 @@ def configure_routes(app, db):
                                     results=results,
                                     title="Table View for {}".format(table_name))
 
+    @app.route("/create-all")
+    def create_all_tables():
+        db.metadata.create_all(db.engine)
+        return "All tables should have been initialized"
+
     return app
 
 
