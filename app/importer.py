@@ -2,7 +2,8 @@ import csv
 from datetime import datetime
 from decimal import Decimal
 from itertools import izip, starmap
-from models import db, Transaction
+from models.base_model import db
+from models.data_models import Transaction
 from wtforms import Form
 from wtforms.fields import FileField, SelectField, SubmitField
 from wtforms.validators import Required

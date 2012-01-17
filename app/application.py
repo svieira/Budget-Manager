@@ -2,8 +2,9 @@ from flask import abort, flash, Flask, g, Markup, redirect, render_template, req
 from flask.ext import admin
 from importer import FieldMappingForm, FileUploadForm, load_from_file, prepare_data, import_data
 from itertools import islice
-from models import db
-from models import Account, Category, TransactionType, Transaction, TransactionTag
+from models.base_model import db
+from models.app_models import AutoTagElement
+from models.data_models import Account, Category, TransactionType, Transaction, TransactionTag
 from os import path, remove
 from re import compile, IGNORECASE
 from server.database import connect_db, query_db
@@ -13,7 +14,7 @@ from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields import SelectField
 from wtforms.validators import Required
 
-MANAGED_MODELS = [Account, Category, TransactionType, Transaction, TransactionTag]
+MANAGED_MODELS = [Account, AutoTagElement, Category, TransactionType, Transaction, TransactionTag]
 MANAGED_MODEL_MAP = dict(account=Account,
                             category=Category,
                             transactiontype=TransactionType,

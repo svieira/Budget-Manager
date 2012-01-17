@@ -1,12 +1,9 @@
-from flask.ext.sqlalchemy import SQLAlchemy
+from base_model import BaseModel, db
 from sqlalchemy.sql import func
 
-db = SQLAlchemy()
 
-
-class Account(db.Model):
+class Account(db.Model, BaseModel):
     __tablename__ = "Accounts"
-    __table_args__ = {'sqlite_autoincrement': True}
 
     accountID = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String, nullable=False)
@@ -19,9 +16,8 @@ class Account(db.Model):
         return "{} Account".format(self.name)
 
 
-class Category(db.Model):
+class Category(db.Model, BaseModel):
     __tablename__ = "Categories"
-    __table_args__ = {'sqlite_autoincrement': True}
 
     categoryID = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String, nullable=False)
@@ -33,9 +29,8 @@ class Category(db.Model):
         return "{}".format(self.name)
 
 
-class TransactionType(db.Model):
+class TransactionType(db.Model, BaseModel):
     __tablename__ = "TransactionTypes"
-    __table_args__ = {'sqlite_autoincrement': True}
 
     transactionTypeID = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String, nullable=False)
@@ -49,7 +44,7 @@ class TransactionType(db.Model):
         return "{} ({})".format(self.name, kind)
 
 
-class TransactionsToTags(db.Model):
+class TransactionsToTags(db.Model, BaseModel):
     __tablename__ = "TransactionsToTags"
     transactionID = db.Column(db.Integer, db.ForeignKey("Transactions.transactionID"), primary_key=True)
     tagID = db.Column(db.Integer, db.ForeignKey("TransactionTags.tagID"), primary_key=True)
@@ -60,9 +55,8 @@ def get_trans_id():
     return max_trans_id + 1
 
 
-class Transaction(db.Model):
+class Transaction(db.Model, BaseModel):
     __tablename__ = "Transactions"
-    __table_args__ = {'sqlite_autoincrement': True}
 
     transactionID = db.Column(db.Integer, primary_key=True, nullable=False, default=get_trans_id)
     amount = db.Column(db.Numeric, nullable=False)
@@ -81,9 +75,8 @@ class Transaction(db.Model):
         return "{} for {} on {}".format(self.description, self.amount, self.transactionDate)
 
 
-class TransactionTag(db.Model):
+class TransactionTag(db.Model, BaseModel):
     __tablename__ = "TransactionTags"
-    __table_args__ = {'sqlite_autoincrement': True}
 
     tagID = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String, nullable=False)
