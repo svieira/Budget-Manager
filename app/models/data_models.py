@@ -5,7 +5,7 @@ from sqlalchemy.sql import func
 class Account(db.Model, BaseModel):
     __tablename__ = "Accounts"
 
-    accountID = db.Column(db.Integer, primary_key=True, nullable=False)
+    accountID = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     isCredit = db.Column(db.Boolean, default=0, nullable=False)
@@ -19,7 +19,7 @@ class Account(db.Model, BaseModel):
 class Category(db.Model, BaseModel):
     __tablename__ = "Categories"
 
-    categoryID = db.Column(db.Integer, primary_key=True, nullable=False)
+    categoryID = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
 
@@ -32,7 +32,7 @@ class Category(db.Model, BaseModel):
 class TransactionType(db.Model, BaseModel):
     __tablename__ = "TransactionTypes"
 
-    transactionTypeID = db.Column(db.Integer, primary_key=True, nullable=False)
+    transactionTypeID = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     isIncome = db.Column(db.Boolean, default=0, nullable=False)
@@ -52,13 +52,14 @@ class TransactionsToTags(db.Model, BaseModel):
 
 def get_trans_id():
     max_trans_id = Transaction.query.with_entities(func.max(Transaction.transactionID).label("transactionID")).first().transactionID
+    max_trans_id = max_trans_id if max_trans_id is not None else 0
     return max_trans_id + 1
 
 
 class Transaction(db.Model, BaseModel):
     __tablename__ = "Transactions"
 
-    transactionID = db.Column(db.Integer, primary_key=True, nullable=False, default=get_trans_id)
+    transactionID = db.Column(db.Integer, primary_key=True, default=get_trans_id)
     amount = db.Column(db.Numeric, nullable=False)
     description = db.Column(db.String, nullable=False)
     transactionDate = db.Column(db.DateTime, nullable=False)
@@ -78,7 +79,7 @@ class Transaction(db.Model, BaseModel):
 class TransactionTag(db.Model, BaseModel):
     __tablename__ = "TransactionTags"
 
-    tagID = db.Column(db.Integer, primary_key=True, nullable=False)
+    tagID = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
     categoryID = db.Column(db.Integer, db.ForeignKey("Categories.categoryID"), nullable=False)
