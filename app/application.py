@@ -1,6 +1,6 @@
 from flask import abort, flash, Flask, g, Markup, redirect, render_template, request, url_for
 from flask.ext import admin
-from importer import FieldMappingForm, FileUploadForm, load_from_file, prepare_data, import_data
+from importer import FieldMappingForm, FileUploadForm, load_from_file, import_data
 from itertools import islice
 from models.base_model import db
 from models.app_models import AutoTagElement
@@ -151,12 +151,11 @@ def configure_routes(app, db):
         form = NewForm(request.form)
 
         if request.method == "POST" and form.validate():
-            stream = prepare_data(data_file,
+            total_imported = import_data(data_file,
                                     mode,
                                     form["spend_transactions"].data,
                                     form["income_transactions"].data,
                                     form["accountID"].data)
-            total_imported = import_data(stream)
             flash("{} records have been imported".format(total_imported))
 
             data_file.close()

@@ -2,11 +2,14 @@ import csv
 from datetime import datetime
 from decimal import Decimal
 from itertools import izip, starmap
+from models.app_models import AutoTagElement
 from models.base_model import db
 from models.data_models import Transaction
 from wtforms import Form
 from wtforms.fields import FileField, SelectField, SubmitField
 from wtforms.validators import Required
+
+DEFAULT_FIELD_NAMES = ["transactionDate", "description", "amount", "transactionTypeID", "accountID"]
 
 
 class FileUploadForm(Form):
@@ -40,7 +43,7 @@ def _strip_formating(value):
 
 
 def _process_row(date, desc, amount):
-    return [datetime.strptime(date, "%Y/%m/%d"), desc, _strip_formating(amount)]
+    return [process_date(date), desc, process_amount(amount)]
 
 
 # Select_* functions must return a tuple with t[0] containing
@@ -76,11 +79,21 @@ def inject_data(val, stream, replace=False):
         yield datum
 
 
-def process_amount(*data):
+def process_amount(val):
     """Convert amounts to valid decimals"""
-    data = list(data)
-    data[2] = abs(Decimal(data[2]))
-    return data
+    return abs(Decimal(_strip_formating(val)))
+
+
+def process_date(val, formats=["%m{s}%d{s}%Y", "%d{s}%m{s}%Y", "%Y{s}%m{s}%d"], seperators=["-", "/", " "]):
+    potential_formats = {f.format(s=s) for f in formats for s in seperators}
+
+    for frmt in potential_formats:
+        try:
+            return datetime.strptime(val, frmt)
+        except ValueError:
+            continue
+
+    return None
 
 
 def prepare_data(stream, mode, spend_type, save_type, account):
@@ -100,19 +113,52 @@ def prepare_data(stream, mode, spend_type, save_type, account):
     stream = exhaust_substreams(stream)
     stream = inject_data(inject_types, stream, True)
     for datum in stream:
-        yield process_amount(*datum)
+        yield datum
 
 
-def import_data(rows, field_names=["transactionDate", "description", "amount", "transactionTypeID", "accountID"], Model=Transaction, session=None):
+def map_to_model(stream, field_names=DEFAULT_FIELD_NAMES, Model=Transaction):
     field_names = field_names if field_names else []
-    session = session if session is not None else db.session
 
-    i = 0
-    for row in rows:
+    for row in stream:
         assert len(row) == len(field_names), \
                 "Provided row's length does not match length of field names"
-        session.add(Model(**dict(izip(field_names, row))))
+        yield Model(**dict(izip(field_names, row)))
+
+
+def auto_tag(model_stream, taggers, entry_getter=lambda e: e.description):
+    for entry in model_stream:
+        val = entry_getter(entry)
+        tags = set(entry.tags)
+        for tagger in taggers:
+            if tagger.matches(val):
+                tags.update(tagger.tags)
+        entry.tags = list(tags)
+        yield entry
+
+
+def insert_data(modeled_data, session=None):
+
+    session = session if session is not None else db.session
+    i = 0
+
+    for entry in modeled_data:
+        session.add(entry)
         i += 1
 
     session.commit()
     return i
+
+
+def _load_all_tag_mappers():
+    return AutoTagElement.query.all()
+
+
+def import_data(data_file, mode, spend_type, income_type, account_type):
+    stream = prepare_data(data_file,
+                            mode,
+                            spend_type,
+                            income_type,
+                            account_type)
+    stream = map_to_model(stream)
+    stream = auto_tag(stream, _load_all_tag_mappers())
+    return insert_data(stream)
