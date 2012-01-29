@@ -1,11 +1,10 @@
 from base_model import BaseModel, db
 from re import compile, IGNORECASE
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.sql import func
 
 AutoTagMapping = db.Table("AutoTagToTags", db.metadata,
-    db.Column("autoTagID", db.Integer, db.ForeignKey("AutoTagElements.autoTagID")),
-    db.Column("tagID", db.Integer, db.ForeignKey("TransactionTags.tagID"))
+    db.Column("autoTagID", db.Integer, db.ForeignKey("AutoTagElements.autoTagID"), primary_key=True),
+    db.Column("tagID", db.Integer, db.ForeignKey("TransactionTags.tagID"), primary_key=True)
 )
 
 
@@ -14,8 +13,6 @@ class AutoTagElement(db.Model, BaseModel):
     autoTagID = db.Column(db.Integer, primary_key=True, nullable=False)
     SearchString = db.Column("search_string", db.String, nullable=False)
     IsRegex = db.Column("isRegex", db.Boolean, nullable=False, default=0)
-    created = db.Column(db.Date, nullable=False)  # , default=func.now
-    last_updated = db.Column(db.Date, nullable=True)
 
     tags = db.relationship("TransactionTag", secondary=AutoTagMapping)
 

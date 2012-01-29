@@ -1,5 +1,4 @@
 from base_model import BaseModel, db
-from sqlalchemy.sql import func
 
 
 class Account(db.Model, BaseModel):
@@ -43,23 +42,16 @@ class TransactionType(db.Model, BaseModel):
         kind = "Income" if self.isIncome else "Spending"
         return "{} ({})".format(self.name, kind)
 
-
-class TransactionsToTags(db.Model, BaseModel):
-    __tablename__ = "TransactionsToTags"
-    transactionID = db.Column(db.Integer, db.ForeignKey("Transactions.transactionID"), primary_key=True)
-    tagID = db.Column(db.Integer, db.ForeignKey("TransactionTags.tagID"), primary_key=True)
-
-
-def get_trans_id():
-    max_trans_id = Transaction.query.with_entities(func.max(Transaction.transactionID).label("transactionID")).first().transactionID
-    max_trans_id = max_trans_id if max_trans_id is not None else 0
-    return max_trans_id + 1
+TransactionToTagMapping = db.Table("TransactionsToTags", db.metadata,
+    db.Column("transactionID", db.Integer, db.ForeignKey("Transactions.transactionID"), primary_key=True),
+    db.Column("tagID", db.Integer, db.ForeignKey("TransactionTags.tagID"), primary_key=True)
+)
 
 
 class Transaction(db.Model, BaseModel):
     __tablename__ = "Transactions"
 
-    transactionID = db.Column(db.Integer, primary_key=True, default=get_trans_id)
+    transactionID = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Numeric, nullable=False)
     description = db.Column(db.String, nullable=False)
     transactionDate = db.Column(db.DateTime, nullable=False)
@@ -70,7 +62,7 @@ class Transaction(db.Model, BaseModel):
                             db.ForeignKey("Accounts.accountID"),
                             nullable=False)
 
-    tags = db.relationship("TransactionTag", secondary=TransactionsToTags.__table__)
+    tags = db.relationship("TransactionTag", secondary=TransactionToTagMapping)
 
     def __repr__(self):
         return "{} for {} on {}".format(self.description, self.amount, self.transactionDate)
@@ -82,7 +74,7 @@ class TransactionTag(db.Model, BaseModel):
     tagID = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String)
-    categoryID = db.Column(db.Integer, db.ForeignKey("Categories.categoryID"), nullable=False)
+    categoryID = db.Column(db.Integer, db.ForeignKey("Categories.categoryID"))
 
     def __repr__(self):
         return "{} ({})".format(self.name, self.category.name)
