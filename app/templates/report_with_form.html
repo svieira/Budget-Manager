@@ -1,0 +1,8 @@
+{% extends "report_layout.html" -%}
+{% import "helpers/form_helpers.html" as forms -%}
+{%- block content %}
+{% if form is defined -%}
+{{forms.render_form(form)}}
+{%- endif %}
+{{super()}}
+{%- endblock content %}
