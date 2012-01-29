@@ -1,5 +1,6 @@
 from flask import abort, flash, Flask, g, Markup, redirect, render_template, request, url_for
 from flask.ext import admin
+from flask.ext.admin.datastore.sqlalchemy import _form_for_model
 from importer import FieldMappingForm, FileUploadForm, load_from_file, import_data
 from itertools import islice
 from models.base_model import db
@@ -11,7 +12,7 @@ from server.database import connect_db, query_db
 from sqlalchemy import or_
 from werkzeug import secure_filename
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.fields import SelectField
+from wtforms.fields import SelectField, SubmitField
 from wtforms.validators import Required
 
 MANAGED_MODELS = [Account, AutoTagElement, Category, TransactionType, Transaction, TransactionTag]
@@ -74,6 +75,51 @@ def configure_routes(app, db):
         results = Markup("<ul>") + Markup("\n").join(results) + Markup("</ul>")
 
         return render_template("layout.html", content=results)
+
+    @app.route("/add/tag-map", methods=["GET", "POST"])
+    def add_tag_map():
+        AutoTagElementForm = _form_for_model(AutoTagElement, db.session)
+        AutoTagElementForm.submit = SubmitField("Search")
+        AutoTagElementForm.continue_ = SubmitField("Add and Tag")
+
+        form = AutoTagElementForm(request.form)
+        valid_post = request.method == "POST" and form.validate()
+
+        results = [["Transaction"]]
+        if valid_post:
+            autotag = AutoTagElement()
+            form.populate_obj(autotag)
+            matches = [el for el in Transaction.query.all() if autotag.matches(el.description)]
+
+        if valid_post and form.submit.data:
+            flash("There are {} elements that will also be tagged.".format(len(matches)))
+
+            results += [[unicode(el)] for el in matches]
+
+            return render_template("report_with_form.html", form=form, results=results)
+
+        elif valid_post and form.continue_.data:
+            db.session.add(autotag)
+            db.session.commit()
+
+            flash("{} added.".format(autotag))
+
+            new_tags = set(autotag.tags)
+            i = 0
+            for transaction in matches:
+                transaction.tags = list(set(transaction.tags) | new_tags)
+                db.session.add(transaction)
+                i += 1
+            db.session.commit()
+            flash("{} added to {} transactions.".format(new_tags, i))
+
+        return render_template("edit_layout.html", form=form, title="Add New Tag Map")
+
+    @app.route("/reports/transactions-with-tags", methods=["GET", "POST"])
+    def transactions_with_tags():
+        results = Transaction.query.outerjoin(Transaction.tags).all()
+        results = [["Transaction", "Tags"]] + [[unicode(el), unicode(el.tags)] for el in results]
+        return render_template("report_layout.html", results=results, title="Transactions with tags")
 
     @app.route("/search/<model>", methods=["GET", "POST"])
     @app.route("/search", methods=["GET", "POST"])
