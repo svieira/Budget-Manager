@@ -85,7 +85,7 @@ def process_amount(val):
 
 
 def process_date(val, formats=["%m{s}%d{s}%Y", "%d{s}%m{s}%Y", "%Y{s}%m{s}%d"], seperators=["-", "/", " "]):
-    potential_formats = {f.format(s=s) for f in formats for s in seperators}
+    potential_formats = (f.format(s=s) for f in formats for s in seperators)
 
     for frmt in potential_formats:
         try:
