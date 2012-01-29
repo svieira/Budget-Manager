@@ -53,7 +53,10 @@ def configure_request_details(app):
 
     @app.teardown_request
     def teardown_request(exception):
-        g.db.close()
+        try:
+            g.db.close()
+        except AttributeError:
+            pass
 
     return app
 
@@ -231,11 +234,6 @@ def configure_routes(app, db):
             return render_template("report_layout.html",
                                     results=results,
                                     title="Table View for {}".format(table_name))
-
-    @app.route("/create-all")
-    def create_all_tables():
-        db.metadata.create_all(db.engine)
-        return "All tables should have been initialized"
 
     return app
 
