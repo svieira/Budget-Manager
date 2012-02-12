@@ -5,11 +5,11 @@ from importer import FieldMappingForm, FileUploadForm, load_from_file, import_da
 from itertools import islice
 from models.base_model import db
 from models.app_models import AutoTagElement
-from models.data_models import Account, Category, TransactionType, Transaction, TransactionTag
+from models.data_models import Account, Category, TransactionType, Transaction, TransactionTag, TransactionToTagMapping
 from os import path, remove
 from re import compile, IGNORECASE
 from server.database import connect_db, query_db
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from werkzeug import secure_filename
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields import SelectField, SubmitField
@@ -118,11 +118,23 @@ def configure_routes(app, db):
 
         return render_template("edit_layout.html", form=form, title="Add New Tag Map")
 
-    @app.route("/reports/transactions-with-tags", methods=["GET", "POST"])
+    @app.route("/reports/transactions-with-tags")
     def transactions_with_tags():
         results = Transaction.query.outerjoin(Transaction.tags).all()
         results = [["Transaction", "Tags"]] + [[unicode(el), unicode(el.tags)] for el in results]
         return render_template("report_layout.html", results=results, title="Transactions with tags")
+
+    @app.route("/reports/expense-by-category")
+    def expense_by_category():
+        results = db.session.query(Category.name.label("Category Name"),
+                                    Category.description.label("Category Description"),
+                                    func.sum(Transaction.amount).label("Total Spend")). \
+                                outerjoin(TransactionTag). \
+                                outerjoin(TransactionToTagMapping). \
+                                outerjoin(Transaction). \
+                                group_by(Category.name, Category.description)
+        results = [[desc["name"] for desc in results.column_descriptions]] + [cat for cat in results.all()]
+        return render_template("report_layout.html", results=results, title="Expense by category")
 
     @app.route("/search/<model>", methods=["GET", "POST"])
     @app.route("/search", methods=["GET", "POST"])
