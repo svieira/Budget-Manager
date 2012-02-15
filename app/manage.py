@@ -1,6 +1,6 @@
 from application import create_app
 from models.base_model import db
-from flaskext.script import Manager
+from flask.ext.script import Manager
 
 app = create_app()
 command_runner = Manager(app)
