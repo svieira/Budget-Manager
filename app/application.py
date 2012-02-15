@@ -1,15 +1,14 @@
-from flask import abort, flash, Flask, g, Markup, redirect, render_template, request, url_for
+from flask import abort, flash, Flask, Markup, redirect, render_template, request, url_for
 from flask.ext import admin
 from flask.ext.admin.datastore.sqlalchemy import _form_for_model
 from importer import FieldMappingForm, FileUploadForm, load_from_file, import_data
-from itertools import islice
 from models.base_model import db
 from models.app_models import AutoTagElement
 from models.data_models import Account, Category, TransactionType, Transaction, TransactionTag, TransactionToTagMapping
 from os import path, remove
 from re import compile, IGNORECASE
-from server.database import connect_db, query_db
 from sqlalchemy import func, or_
+from utils.database import generate_result_set
 from werkzeug import secure_filename
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
 from wtforms.fields import SelectField, SubmitField
@@ -41,22 +40,6 @@ def create_app(config_path=None, name=None):
     app.register_blueprint(admin_blueprint, url_prefix="/tables")
 
     configure_routes(app, db)
-    configure_request_details(app)
-
-    return app
-
-
-def configure_request_details(app):
-    @app.before_request
-    def before_request():
-        g.db = connect_db(app)
-
-    @app.teardown_request
-    def teardown_request(exception):
-        try:
-            g.db.close()
-        except AttributeError:
-            pass
 
     return app
 
@@ -65,15 +48,11 @@ def configure_routes(app, db):
 
     @app.route("/")
     def index():
-        results = query_db("""
-            SELECT name
-                , tbl_name
-            FROM sqlite_master
-            WHERE name NOT LIKE 'sqlite%'
-            AND type = 'table'""")
 
         li = Markup("""<li><a href="{}">{}</a></li>""")
-        results = [li.format(url_for("view_table", table_name=tbl_name), name) for name, tbl_name in islice(results, 1, None)]
+        results = db.metadata.tables.keys()
+        results.sort()
+        results = [li.format(url_for("view_table", table_name=tbl_name), tbl_name) for tbl_name in results]
 
         results = Markup("<ul>") + Markup("\n").join(results) + Markup("</ul>")
 
@@ -133,7 +112,7 @@ def configure_routes(app, db):
                                 outerjoin(TransactionToTagMapping). \
                                 outerjoin(Transaction). \
                                 group_by(Category.name, Category.description)
-        results = [[desc["name"] for desc in results.column_descriptions]] + [cat for cat in results.all()]
+        results = generate_result_set(results)
         return render_template("report_layout.html", results=results, title="Expense by category")
 
     @app.route("/search/<model>", methods=["GET", "POST"])
@@ -240,15 +219,16 @@ def configure_routes(app, db):
 
     @app.route("/<table_name>")
     def view_table(table_name=None):
-        if table_name is None or not VALID_TABLENAME.findall(table_name):
-            return abort(404)
+        if table_name is None:
+            abort(404)
         else:
 
             results = []
 
             try:
-                results = query_db("SELECT * FROM {}".format(table_name))
-                results = list(results)
+                table = db.metadata.tables.get(table_name, None)
+                query = db.session.query(table)
+                results = generate_result_set(query)
             except Exception:
                 abort(404)
 
