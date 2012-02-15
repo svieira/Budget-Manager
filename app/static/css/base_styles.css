@@ -20,6 +20,9 @@ table {
 	border-collapse: collapse;
 	border: 1px solid #777;
 }
+th {
+	text-transform: capitalize;
+}
 tr:nth-child(even) td {
 	background-color: #DCDCDC;
 }
