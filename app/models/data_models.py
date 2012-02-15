@@ -25,7 +25,7 @@ class Category(db.Model, BaseModel):
     tags = db.relationship("TransactionTag", backref="category")
 
     def __repr__(self):
-        return "{}".format(self.name)
+        return self.name
 
 
 class TransactionType(db.Model, BaseModel):
