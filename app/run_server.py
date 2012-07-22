@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from __future__ import absolute_import, division
 from application import create_app
 from os import path

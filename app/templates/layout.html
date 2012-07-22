@@ -12,11 +12,11 @@
 <body>
 {%- if self.header() %}
 <div class="header">{% block header %}<h1>{{self.title()}}</h1>
-<p><a href="{{url_for('index')}}">Home</a> &bull;
+<p><a href="{{url_for('app.index')}}">Home</a> &bull;
 <a href="{{url_for('admin.index')}}">Admin (Data Entry)</a> &bull;
-<a href="{{url_for('provide_file')}}">Import</a> &bull;
-<a href="{{url_for('add_tag_map')}}">Add New Tag Map</a> &bull;
-<a href="{{url_for('search')}}">Search</a></p>
+<a href="{{url_for('data.provide_file')}}">Import</a> &bull;
+<a href="{{url_for('data.add_tag_map')}}">Add New Tag Map</a> &bull;
+<a href="{{url_for('data.search')}}">Search</a></p>
 {%- endblock header %}</div>
 {%- endif %}
 {% set flashed_messages = get_flashed_messages(with_categories=true) -%}
